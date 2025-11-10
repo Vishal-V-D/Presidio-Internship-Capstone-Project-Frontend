@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef, Dispatch, SetStateAction } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Clock,
@@ -17,11 +17,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   CheckCircle,
-  Circle,
-  XCircle,
   Timer,
   Activity,
-  Loader2,
   FileCode2,
   ChevronLeft,
   ChevronRight,
@@ -79,8 +76,6 @@ public class Solution {
     }
 }`,
 };
-
-type TestStatus = "pending" | "running" | "passed" | "failed";
 
 // --- Custom Scrollbar Hiding Styles ---
 // NOTE: These styles are crucial for the requested "hidden scrollbar" behavior.
@@ -583,11 +578,9 @@ interface CodeEditorPanelProps {
     passedTests?: number;
   } | null) => void;
   isContestOver?: boolean;
-  onTestProgressInit: () => void;
-  onTestProgressUpdate: (submission: SubmissionResponse) => void;
 }
 
-const CodeEditorPanel = ({ problem, onFullscreen, isBottomCollapsed, onToggleBottom, onSubmissionResult, contestId, language, setLanguage, socket: _socket, onSubmitWithRealtime: _onSubmitWithRealtime, isRunning, setIsRunning, isSubmitting, setIsSubmitting, liveProgress: _liveProgress, setLiveProgress: _setLiveProgress, isContestOver = false, onTestProgressInit, onTestProgressUpdate }: CodeEditorPanelProps) => {
+const CodeEditorPanel = ({ problem, onFullscreen, isBottomCollapsed, onToggleBottom, onSubmissionResult, contestId, language, setLanguage, socket: _socket, onSubmitWithRealtime: _onSubmitWithRealtime, isRunning, setIsRunning, isSubmitting, setIsSubmitting, liveProgress: _liveProgress, setLiveProgress: _setLiveProgress, isContestOver = false }: CodeEditorPanelProps) => {
   const [code, setCode] = useState("");
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -612,8 +605,6 @@ const CodeEditorPanel = ({ problem, onFullscreen, isBottomCollapsed, onToggleBot
       setSubmitError('Authentication required. Please login again.');
       return;
     }
-
-    onTestProgressInit();
 
     setIsSubmitting(true);
     setSubmitError(null);
@@ -668,8 +659,6 @@ const CodeEditorPanel = ({ problem, onFullscreen, isBottomCollapsed, onToggleBot
       return;
     }
 
-    onTestProgressInit();
-
     setIsRunning(true);
     setSubmitError(null);
     
@@ -719,7 +708,6 @@ const CodeEditorPanel = ({ problem, onFullscreen, isBottomCollapsed, onToggleBot
         
         // Update result immediately to show current state
         onSubmissionResult(submission);
-        onTestProgressUpdate(submission);
 
         if (submission.status !== "PENDING" && submission.status !== "RUNNING") {
           console.log(`✅ Polling complete - Final status: ${submission.status}`);
@@ -1603,156 +1591,6 @@ const ProblemPage = () => {
   const [isContestOver, setIsContestOver] = useState(false);
   const [showContestOverModal, setShowContestOverModal] = useState(false);
   const [isPageFullscreen, setIsPageFullscreen] = useState(false);
-
-  const [testProgress, setTestProgress] = useState<Record<number, TestStatus>>({});
-  const [currentVisibleTest, setCurrentVisibleTest] = useState<number | null>(null);
-  const [hiddenProgress, setHiddenProgress] = useState<{ total: number; passed: number; failed: number }>({
-    total: 0,
-    passed: 0,
-    failed: 0,
-  });
-
-  const initializeTestProgress = useCallback(() => {
-    if (!problem || !problem.testcases) {
-      setTestProgress({});
-      setCurrentVisibleTest(null);
-      setHiddenProgress({ total: 0, passed: 0, failed: 0 });
-      return;
-    }
-
-    const baseStatuses: Record<number, TestStatus> = {};
-    problem.testcases.forEach((tc, idx) => {
-      if (!tc.isHidden) {
-        baseStatuses[idx + 1] = "pending";
-      }
-    });
-
-    const hiddenTotal = problem.testcases.filter((tc) => tc.isHidden).length;
-
-    setTestProgress(baseStatuses);
-    setCurrentVisibleTest(null);
-    setHiddenProgress({ total: hiddenTotal, passed: 0, failed: 0 });
-  }, [problem]);
-
-  useEffect(() => {
-    initializeTestProgress();
-  }, [initializeTestProgress]);
-
-  const updateTestProgressFromSubmission = useCallback(
-    (submission: SubmissionResponse) => {
-      if (!problem || !problem.testcases || problem.testcases.length === 0) {
-        setTestProgress({});
-        setCurrentVisibleTest(null);
-        setHiddenProgress({ total: 0, passed: 0, failed: 0 });
-        setLiveProgress(null);
-        return;
-      }
-
-      const testcases = problem.testcases;
-      const visibleStatuses: Record<number, TestStatus> = {};
-
-      testcases.forEach((tc, idx) => {
-        if (!tc.isHidden) {
-          visibleStatuses[idx + 1] = "pending";
-        }
-      });
-
-      const totalVisible = Object.keys(visibleStatuses).length;
-      const hiddenTotal = testcases.filter((tc) => tc.isHidden).length;
-
-      let hiddenPassed = 0;
-      let hiddenFailed = 0;
-      let runningTest: number | null = null;
-
-      submission.testResults?.forEach((result) => {
-        const tc = testcases[result.testNumber - 1];
-        if (!tc) return;
-
-        const statusValue = (result.status || "").toUpperCase();
-
-        if (tc.isHidden) {
-          if (["PASSED", "AC", "ACCEPTED"].includes(statusValue)) {
-            hiddenPassed += 1;
-          } else {
-            hiddenFailed += 1;
-          }
-        } else {
-          if (["PASSED", "AC", "ACCEPTED"].includes(statusValue)) {
-            visibleStatuses[result.testNumber] = "passed";
-          } else if (["RUNNING", "PENDING"].includes(statusValue)) {
-            visibleStatuses[result.testNumber] = "running";
-            runningTest = result.testNumber;
-          } else if (statusValue) {
-            visibleStatuses[result.testNumber] = "failed";
-          }
-        }
-      });
-
-      if ((submission.status === "RUNNING" || submission.status === "PENDING") && runningTest === null && totalVisible > 0) {
-        const nextVisibleIndex = testcases.findIndex(
-          (tc, idx) => !tc.isHidden && visibleStatuses[idx + 1] === "pending"
-        );
-        if (nextVisibleIndex !== -1) {
-          visibleStatuses[nextVisibleIndex + 1] = "running";
-          runningTest = nextVisibleIndex + 1;
-        }
-      }
-
-      const passedVisible = typeof submission.passedTests === "number"
-        ? Math.min(submission.passedTests, totalVisible)
-        : Object.values(visibleStatuses).filter((status) => status === "passed").length;
-
-      setTestProgress(visibleStatuses);
-      setCurrentVisibleTest(runningTest);
-      setHiddenProgress({
-        total: hiddenTotal,
-        passed: hiddenPassed,
-        failed: hiddenFailed,
-      });
-
-      if (totalVisible > 0) {
-        setLiveProgress({
-          status: submission.status || "RUNNING",
-          message:
-            submission.status === "RUNNING"
-              ? "Executing public test cases..."
-              : submission.verdict || submission.status || "",
-          testNumber: runningTest ?? undefined,
-          totalTests: totalVisible,
-          passedTests: passedVisible,
-        });
-      } else {
-        setLiveProgress(null);
-      }
-    },
-    [problem]
-  );
-
-  const handleTestProgressInit = useCallback(() => {
-    initializeTestProgress();
-    setSubmissionResult(null);
-
-    if (problem && problem.testcases) {
-      const totalVisible = problem.testcases.filter((tc) => !tc.isHidden).length;
-      if (totalVisible > 0) {
-        setLiveProgress({
-          status: "RUNNING",
-          message: "Executing public test cases...",
-          totalTests: totalVisible,
-          passedTests: 0,
-        });
-      } else {
-        setLiveProgress(null);
-      }
-    }
-  }, [initializeTestProgress, problem]);
-
-  const handleTestProgressUpdate = useCallback(
-    (submission: SubmissionResponse) => {
-      updateTestProgressFromSubmission(submission);
-    },
-    [updateTestProgressFromSubmission]
-  );
 
   // Auto-enter fullscreen when contest page loads
   useEffect(() => {
