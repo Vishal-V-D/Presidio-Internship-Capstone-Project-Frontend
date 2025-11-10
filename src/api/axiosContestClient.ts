@@ -3,7 +3,7 @@
 import axios from "axios";
 
 const axiosContestClient = axios.create({
-  baseURL: "http://localhost:4000/api",
+  baseURL: "http://quantum-judge-alb-dev-233767472.us-east-1.elb.amazonaws.com:4000/api",
   headers: { 
     "Content-Type": "application/json"
   }
@@ -14,15 +14,18 @@ axiosContestClient.interceptors.request.use(
   (config) => {
     // Add Authorization Bearer token from localStorage
     const token = localStorage.getItem('token');
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log(`🚀 [ContestService] ${config.method?.toUpperCase()} ${config.url} [Auth: ✓]`);
+    } else {
+      console.warn(`⚠️ [ContestService] ${config.method?.toUpperCase()} ${config.url} [Auth: ✗ - No token found]`);
     }
     
-    console.log(`🚀 [ContestService] ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },
   (error) => {
-    console.error('Request Error:', error);
+    console.error('❌ [ContestService] Request Error:', error);
     return Promise.reject(error);
   }
 );
@@ -34,16 +37,29 @@ axiosContestClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    console.log(`❌ [ContestService] ${error.config?.url}`, error.response?.status);
+    const url = error.config?.url;
+    const status = error.response?.status;
     
-    // Handle 401 Unauthorized
-    if (error.response?.status === 401) {
-      console.error('Authentication error - Please log in again');
-      // Clear any existing auth data
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
-      // Redirect to login page
-      window.location.href = '/login';
+    console.log(`❌ [ContestService] ${url}`, status);
+    
+    // Handle 401 Unauthorized - Only clear auth if token was actually sent
+    if (status === 401) {
+      const hadToken = error.config?.headers?.Authorization;
+      
+      if (hadToken) {
+        // Token was sent but rejected - it's invalid/expired
+        console.error('🔒 [ContestService] Token rejected by server - clearing auth data');
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        
+        // Only redirect if not already on login page
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+      } else {
+        // No token was sent - this is a request issue, not an auth issue
+        console.warn('⚠️ [ContestService] 401 but no token was sent - possible race condition');
+      }
     }
     
     return Promise.reject(error);

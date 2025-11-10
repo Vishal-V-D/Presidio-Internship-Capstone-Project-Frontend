@@ -90,8 +90,8 @@ export const submissionService = {
   createSubmission: (data: SubmissionCreate) =>
     axiosSubmissionClient.post("/submissions", data),
 
-  getSubmissionById: (id: string) =>
-    axiosSubmissionClient.get<SubmissionResponse>(`/submissions/${id}`),
+  getSubmissionById: (id: string, skipAuthRedirect = false) =>
+    axiosSubmissionClient.get<SubmissionResponse>(`/submissions/${id}`, { skipAuthRedirect } as any),
 
   getMySubmissions: (page = 1, limit = 10, status?: string, language?: string) => {
     let query = `?page=${page}&limit=${limit}`;

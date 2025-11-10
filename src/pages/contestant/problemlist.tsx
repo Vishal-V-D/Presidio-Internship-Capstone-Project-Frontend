@@ -153,6 +153,14 @@ function App() {
     // ... (useEffect for fetching problems remains the same)
     useEffect(() => {
         const fetchProblems = async () => {
+            // Ensure we have a token before making the request
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.warn('⚠️ No auth token found, skipping problems fetch');
+                setLoading(false);
+                return;
+            }
+            
             try {
                 setLoading(true);
                 // Assume contestService.listProblems returns problem data with an optional `status` field

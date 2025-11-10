@@ -203,7 +203,7 @@ const SubmissionDetailView = () => {
   <div className="bg-theme-secondary rounded-xl p-6 shadow-lg border border-theme border-l-4 border-l-blue-500">
     <h2 className="text-2xl font-bold text-theme-primary mb-6 flex items-center gap-2">
       <FileText size={28} className="text-blue-500" />
-      Judge Feedback
+      AI Critique
     </h2>
 
     {(() => {

@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const axiosSubmissionClient = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: "http://quantum-judge-alb-dev-233767472.us-east-1.elb.amazonaws.com:5000/api",
   headers: { 
     "Content-Type": "application/json"
   }
@@ -13,15 +13,18 @@ axiosSubmissionClient.interceptors.request.use(
   (config) => {
     // Add Authorization Bearer token from localStorage
     const token = localStorage.getItem('token');
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log(`🚀 [SubmissionService] ${config.method?.toUpperCase()} ${config.url} [Auth: ✓]`);
+    } else {
+      console.warn(`⚠️ [SubmissionService] ${config.method?.toUpperCase()} ${config.url} [Auth: ✗ - No token found]`);
     }
     
-    console.log(`🚀 [SubmissionService] ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },
   (error) => {
-    console.error('Submission Request Error:', error);
+    console.error('❌ [SubmissionService] Request Error:', error);
     return Promise.reject(error);
   }
 );
@@ -33,16 +36,25 @@ axiosSubmissionClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    console.log(`❌ [SubmissionService] ${error.config?.url}`, error.response?.status);
+    const url = error.config?.url;
+    const status = error.response?.status;
+    
+    console.log(`❌ [SubmissionService] ${url}`, status);
     
     // Handle 401 Unauthorized
-    if (error.response?.status === 401) {
-      console.error('Submission authentication error - Please log in again');
-      // Clear any existing auth data
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
-      // Redirect to login page
-      window.location.href = '/login';
+    if (status === 401) {
+      const hadToken = error.config?.headers?.Authorization;
+      
+      if (hadToken) {
+        // Token was sent but rejected
+        console.error('🔒 [SubmissionService] 401 - Authentication failed');
+        console.warn('⚠️ [SubmissionService] Letting component handle auth error - no auto-redirect');
+        // Don't auto-redirect for submission service - let component handle it
+        // This prevents logout during Run/Submit operations
+      } else {
+        // No token was sent - this is a request issue, not an auth issue
+        console.warn('⚠️ [SubmissionService] 401 but no token was sent - possible race condition');
+      }
     }
     
     return Promise.reject(error);

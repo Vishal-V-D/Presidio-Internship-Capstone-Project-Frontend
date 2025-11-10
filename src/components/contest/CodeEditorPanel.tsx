@@ -51,6 +51,13 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({
       return;
     }
 
+    // Validate token exists before submission
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setSubmitError('Authentication required. Please login again.');
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitError(null);
 
@@ -70,7 +77,11 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({
       }
     } catch (error: any) {
       console.error("Submission failed:", error);
-      setSubmitError(error.response?.data?.message || "Failed to submit code");
+      if (error.response?.status === 401) {
+        setSubmitError('Authentication failed. Please refresh the page and try again.');
+      } else {
+        setSubmitError(error.response?.data?.message || "Failed to submit code");
+      }
       setIsSubmitting(false);
     }
   };
@@ -82,7 +93,7 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({
     const poll = setInterval(async () => {
       attempts++;
       try {
-        const response = await submissionService.getSubmissionById(submissionId);
+        const response = await submissionService.getSubmissionById(submissionId, true);
         const submission = response.data;
 
         if (submission.status !== "PENDING" && submission.status !== "RUNNING") {
@@ -96,10 +107,25 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({
           setIsSubmitting(false);
           setSubmitError("Submission is taking longer than expected. Check submissions tab.");
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error polling submission:", error);
-        clearInterval(poll);
-        setIsSubmitting(false);
+        
+        // If it's a 401 error, the interceptor will handle logout
+        if (error.response?.status === 401) {
+          console.warn('⚠️ Authentication error during polling - stopping');
+          clearInterval(poll);
+          setIsSubmitting(false);
+          setSubmitError('Authentication error. Please refresh and try again.');
+        } else {
+          // For other errors, continue polling a few more times
+          if (attempts < maxAttempts - 5) {
+            console.warn('⚠️ Polling error, will retry...');
+          } else {
+            clearInterval(poll);
+            setIsSubmitting(false);
+            setSubmitError('Failed to fetch results. Please try again.');
+          }
+        }
       }
     }, 1000);
   };
@@ -112,6 +138,13 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({
 
     if (!problem.id) {
       setSubmitError("Problem ID is missing");
+      return;
+    }
+
+    // Validate token exists before running
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setSubmitError('Authentication required. Please login again.');
       return;
     }
 
@@ -134,7 +167,11 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({
       }
     } catch (error: any) {
       console.error("Run failed:", error);
-      setSubmitError(error.response?.data?.message || "Failed to run code");
+      if (error.response?.status === 401) {
+        setSubmitError('Authentication failed. Please refresh the page and try again.');
+      } else {
+        setSubmitError(error.response?.data?.message || "Failed to run code");
+      }
       setIsRunning(false);
     }
   };
@@ -146,7 +183,7 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({
     const poll = setInterval(async () => {
       attempts++;
       try {
-        const response = await submissionService.getSubmissionById(submissionId);
+        const response = await submissionService.getSubmissionById(submissionId, true);
         const submission = response.data;
 
         if (submission.status !== "PENDING" && submission.status !== "RUNNING") {
@@ -160,10 +197,25 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({
           setIsRunning(false);
           setSubmitError("Execution is taking longer than expected.");
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error polling run:", error);
-        clearInterval(poll);
-        setIsRunning(false);
+        
+        // If it's a 401 error, the interceptor will handle logout
+        if (error.response?.status === 401) {
+          console.warn('⚠️ Authentication error during polling - stopping');
+          clearInterval(poll);
+          setIsRunning(false);
+          setSubmitError('Authentication error. Please refresh and try again.');
+        } else {
+          // For other errors, continue polling a few more times
+          if (attempts < maxAttempts - 5) {
+            console.warn('⚠️ Polling error, will retry...');
+          } else {
+            clearInterval(poll);
+            setIsRunning(false);
+            setSubmitError('Failed to fetch results. Please try again.');
+          }
+        }
       }
     }, 1000);
   };

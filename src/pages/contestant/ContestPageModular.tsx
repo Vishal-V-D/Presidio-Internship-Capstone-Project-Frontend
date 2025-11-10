@@ -32,6 +32,14 @@ const ContestPageModular = () => {
     const fetchProblem = async () => {
       if (!problemId) return;
       
+      // Ensure we have a token before making the request
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.warn('⚠️ No auth token found, skipping problem fetch');
+        setLoading(false);
+        return;
+      }
+      
       try {
         setLoading(true);
         const response = await contestService.getProblem(problemId);

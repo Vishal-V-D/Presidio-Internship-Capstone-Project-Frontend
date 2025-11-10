@@ -64,14 +64,14 @@ type HyperspeedColors = typeof SHARED_HYPERSPEED_BASE & {
 
 const HYPERSPEED_COLOR_MAP: Record<ThemeMode, HyperspeedColors["colors"]> = {
   light: {
-    roadColor: 0x111111,
-    islandColor: 0xb0b5b9,
+    roadColor: 0x050608,
+    islandColor: 0x111418,
     background: 0x050608,
-    shoulderLines: 0xf1f5f9,
+    shoulderLines: 0xbfc5cb,
     brokenLines: 0xe2e8f0,
-    leftCars: [0x38bdf8, 0x0369a1, 0x0ea5e9],
-    rightCars: [0x2dd4bf, 0x0f766e, 0x14b8a6],
-    sticks: 0xf1f5f9,
+    leftCars: [0xf8fafc, 0xcbd5f5, 0x94a3b8],
+    rightCars: [0xa0aec0, 0x64748b, 0x475569],
+    sticks: 0xf8fafc,
   },
   dark: {
     roadColor: 0x0a0a0a,
@@ -123,7 +123,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-teal-900 legacy:from-[#fff4e0] legacy:via-[#ffe0b2] legacy:to-[#ffcc80]">
       {/* Hero Section with HyperSpeed Background */}
-      <section className="relative overflow-hidden min-h-screen legacy:bg-gradient-to-br legacy:from-[#1f0d05] legacy:via-[#120703] legacy:to-[#080302]">
+      <section className="relative overflow-hidden min-h-screen bg-gradient-to-br from-[#050507] via-[#08090c] to-[#020203] legacy:bg-gradient-to-br legacy:from-[#1f0d05] legacy:via-[#120703] legacy:to-[#080302]">
         {/* HyperSpeed as Background */}
         <div className="absolute inset-0 z-0">
           <Hyperspeed effectOptions={heroHyperspeedOptions} />
