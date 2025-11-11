@@ -31,17 +31,45 @@ QuantumJudge is a full-stack coding contest platform. The frontend SPA handles:
 - **Organizer Workflows**: Contest creation, problem authoring, managing test cases, dashboards.
 - **Real-Time Feedback**: Socket.IO streams run/submit progress directly to the browser.
 
+#Image
+
+<table>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/656a9ff8-722c-4b3e-9214-68ff727ec2b2" width="100%"></td>
+    <td><img src="https://github.com/user-attachments/assets/7f672cce-4a8b-479c-90bb-d055c81a23a3" width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/f780f7ef-aa2f-4dc5-9ea3-60dd44051056" width="100%"></td>
+    <td><img src="https://github.com/user-attachments/assets/37b40350-5575-4dd7-bdff-96b2b7fa564e" width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/57e9675f-5b2e-4109-8b0b-b60017419f41" width="100%"></td>
+    <td><img src="https://github.com/user-attachments/assets/a600cb9b-3372-4dbb-ac70-454d807cd90b" width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/1dbe79c9-f0e8-495d-b371-2603484566d4" width="100%"></td>
+    <td><img src="https://github.com/user-attachments/assets/92c1bdc9-8dba-44d3-bda8-468f67855dfd" width="100%"></td>
+  </tr>
+</table>
+
+
+
+
 ---
 
 ## Architecture
 
 ```mermaid
 graph TD
-  A[React SPA (Vite)] -->|REST| B[Contest Service<br/>http://localhost:4000/api]
-  A -->|REST| C[Submission Service<br/>http://localhost:5000/api]
-  A -->|Socket.IO| C
-  B -->|Contest Metadata & Auth| A
-  C -->|Run/Submit Status + AI Feedback| A
+    A[React SPA Vite]
+    B[Contest Service<br/>http://localhost:4000/api]
+    C[Submission Service<br/>http://localhost:5000/api]
+    
+    A -->|REST| B
+    A -->|REST| C
+    A -->|Socket.IO| C
+    B -->|Contest Metadata & Auth| A
+    C -->|Run/Submit Status + AI Feedback| A
 ```
 
 ### Run / Submit Flow
