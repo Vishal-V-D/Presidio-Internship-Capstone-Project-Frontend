@@ -31,7 +31,7 @@ QuantumJudge is a full-stack coding contest platform. The frontend SPA handles:
 - **Organizer Workflows**: Contest creation, problem authoring, managing test cases, dashboards.
 - **Real-Time Feedback**: Socket.IO streams run/submit progress directly to the browser.
 
-#Image
+## Screenshots
 
 <table>
   <tr>
