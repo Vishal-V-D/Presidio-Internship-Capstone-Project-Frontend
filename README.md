@@ -35,18 +35,18 @@ QuantumJudge is a full-stack coding contest platform. The frontend SPA handles:
 
 ## Architecture
 
-`mermaid
+```mermaid
 graph TD
   A[React SPA (Vite)] -->|REST| B[Contest Service<br/>http://localhost:4000/api]
   A -->|REST| C[Submission Service<br/>http://localhost:5000/api]
   A -->|Socket.IO| C
   B -->|Contest Metadata & Auth| A
   C -->|Run/Submit Status + AI Feedback| A
-`
+```
 
 ### Run / Submit Flow
 
-`mermaid
+```mermaid
 sequenceDiagram
   participant UI as ContestPage.tsx
   participant ContestSvc as Contest Service API
@@ -60,13 +60,13 @@ sequenceDiagram
   Socket-->>UI: TEST_START / TEST_COMPLETE events
   SubSvc->>SubSvc: Execute code & grade
   SubSvc-->>UI: Final verdict + feedback
-`
+```
 
 ---
 
 ## Folder Structure
 
-`
+```
 frontend/
  .env                  # front-end environment variables
  package.json
@@ -107,7 +107,7 @@ frontend/
     utils/
     App.tsx
     main.tsx
-`
+```
 
 ---
 
@@ -130,21 +130,21 @@ frontend/
 
 Create rontend/.env:
 
-`env
+```env
 # REST APIs
 VITE_CONTEST_SERVICE_URL=http://localhost:4000/api
 VITE_SUBMISSION_SERVICE_URL=http://localhost:5000/api
 
 # Socket fallback (used if import.meta.env.SUBMISSION_SERVICE_URL absent)
 SUBMISSION_SERVICE_URL=http://localhost:5000
-`
+```
 
 > **Production**: switch hosts to the ALB / deployment URLs:
-> `
+> ```
 > VITE_CONTEST_SERVICE_URL=http://quantum-judge-alb-dev-233767472.us-east-1.elb.amazonaws.com:4000/api
 > VITE_SUBMISSION_SERVICE_URL=http://quantum-judge-alb-dev-233767472.us-east-1.elb.amazonaws.com:5000/api
 > SUBMISSION_SERVICE_URL=http://quantum-judge-alb-dev-233767472.us-east-1.elb.amazonaws.com:5000
-> `
+> ```
 
 Ensure backend services share the exact same JWT_SECRET so tokens validate across services.
 
@@ -154,30 +154,30 @@ Ensure backend services share the exact same JWT_SECRET so tokens validate acros
 
 1. **Install dependencies**
 
-   `ash
+   ```ash
    npm install
-   `
+   ```
 
 2. **Run backend services** (from week6/):
-   `ash
+   ```ash
    # in separate shells
    npm run start --prefix submission-service     # port 5000
    npm run start --prefix user-contest-service   # port 4000
-   `
+   ```
 
 3. **Start frontend**
 
-   `ash
+   ```ash
    npm run dev
-   `
+   ```
    Open the Vite URL (commonly http://localhost:5173).
 
 4. **Build preview**
 
-   `ash
+   ```ash
    npm run build
    npm run preview
-   `
+   ```
 
 ---
 
